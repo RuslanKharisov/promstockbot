@@ -1,13 +1,16 @@
 # bot.py
+# 🔹 Подключает все модули.
+#
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
-from config import BOT_TOKEN
-from handlers import start, request
-from handlers.subscribe import register_subscribe_handlers
 from aiogram.fsm.storage.memory import MemoryStorage
+
+from config import BOT_TOKEN
+from handlers import api_request, search, onboarding
+
 storage = MemoryStorage()
 
 logging.basicConfig(level=logging.INFO)
@@ -17,12 +20,10 @@ dp = Dispatcher(storage=storage)
 
 # Регистрируем роутеры
 dp.include_routers(
-    start.router,
-    request.router,
+    onboarding.router,
+    api_request.router,
+    search.router,  # ✅ если используешь
 )
-
-# Регистрируем подписку отдельно с доступом к bot
-register_subscribe_handlers(dp, bot)
 
 
 async def main():

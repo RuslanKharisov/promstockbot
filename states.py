@@ -1,6 +1,6 @@
 # states.py
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 
-class SearchState(StatesGroup):
-    waiting_for_sku = State()
+class ApiRequestState(StatesGroup):
+    awaiting_contact = State()
