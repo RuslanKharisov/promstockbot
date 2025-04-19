@@ -1,5 +1,5 @@
 # CI/CD
-name: Deploy and Run Bot
+name: Deploy Python Bot
 
 on:
   push:
@@ -28,18 +28,6 @@ jobs:
         else
           echo "No credentials.json to copy"
         fi
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
-
-    - name: Install Node.js dependencies
-      run: npm ci
-
-    - name: Build project
-      run: npm run build --if-present
 
     - name: Set up Python
       uses: actions/setup-python@v5
