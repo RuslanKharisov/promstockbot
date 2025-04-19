@@ -16,7 +16,7 @@ jobs:
     - name: Restore environment secrets
       run: |
         if [ -f /home/admin2/secrets/bot/.env.production ]; then 
-          cp /home/admin2/secrets/bot/.env.production .env.production
+          cp /home/admin2/secrets/bot/.env.production .env
           echo ".env.production restored"
         else
           echo "No .env.production to copy"
