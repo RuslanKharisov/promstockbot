@@ -1,31 +1,66 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+# CI/CD
+name: Deploy and Run Bot
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build:
-
+  deploy:
     runs-on: self-hosted
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Restore environment secrets
+      run: |
+        if [ -f /home/admin2/secrets/bot/.env.production ]; then 
+          cp /home/admin2/secrets/bot/.env.production .env.production
+          echo ".env.production restored"
+        else
+          echo "No .env.production to copy"
+        fi
+
+        if [ -f /home/admin2/secrets/bot/credentials.json ]; then
+          cp /home/admin2/secrets/bot/credentials.json credentials.json
+          echo "credentials.json restored"
+        else
+          echo "No credentials.json to copy"
+        fi
+
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 22.x
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+
+    - name: Install Node.js dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build --if-present
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Create and activate virtualenv, install Python dependencies
+      run: |
+        if [ ! -d "myvenv" ]; then python -m venv myvenv; fi
+        source myvenv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Start or restart bot with PM2
+      run: |
+        source myvenv/bin/activate
+        if pm2 list | grep -q stockbot; then
+          echo "Restarting stockbot via PM2..."
+          pm2 restart stockbot
+        else
+          echo "Starting stockbot via PM2..."
+          pm2 start bot.py --name stockbot --interpreter ./myvenv/bin/python
+        fi
+        pm2 save
